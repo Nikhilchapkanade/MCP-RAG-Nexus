@@ -74,12 +74,11 @@ Ask about the dev team's progress. The agent will switch tools and search the "S
 
 Browser Link: Click here to ask about the Memory Leak
 
-📂 Project Structure
+## 📂 Project Structure
 
 Here is a quick look at how the code is organized if you want to tinker with it:
 
-Plaintext
-
+```text
 ├── docker-compose.yml      # The blueprint that connects the 3 services
 ├── rag-agent/              # The "Brain"
 │   ├── Dockerfile
@@ -90,7 +89,3 @@ Plaintext
     ├── Dockerfile
     ├── main.py             # Defines the mock Google/Slack tools via FastMCP
     └── requirements.txt
-👋 Contributing
-This is a playground project! Feel free to fork it, add new tools to the mcp-knowledge folder, or swap out Llama 3.2 for a different model. If you run into issues, open an issue or drop a PR!
-
-Happy coding! 🚀
