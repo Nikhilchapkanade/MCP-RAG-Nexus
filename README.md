@@ -1,91 +1,107 @@
-🚀 Mcp-Core
+<p align="center">
+  <h1 align="center">🔌 Mcp-Core</h1>
+  <p align="center"><strong>RAG agent with MCP and Llama 3.2 — instantly connects your tools and knowledge base</strong></p>
+  <p align="center"><em>Fully dockerized proof-of-concept: AI agent that autonomously queries a knowledge server via MCP.</em></p>
+</p>
 
-Welcome to MCP-RAG-Nexus! This is a fully dockerized proof-of-concept designed to explore the power of the Model Context Protocol (MCP).
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.10+-3776AB?style=flat-square&logo=python&logoColor=white"/>
+  <img src="https://img.shields.io/badge/MCP-Protocol-7C3AED?style=flat-square"/>
+  <img src="https://img.shields.io/badge/Llama_3.2-Ollama-000000?style=flat-square"/>
+  <img src="https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker&logoColor=white"/>
+  <img src="https://img.shields.io/badge/LangChain-RAG-1C3C3C?style=flat-square"/>
+</p>
 
-I built this project to demonstrate how a local AI Agent (using Llama 3.2) can "wake up," realize it needs external information, and autonomously query a "Knowledge Server" to get answers. It simulates a real-world scenario where an AI looks up data from tools like Google Drive or Slack without hallucinating.
+---
 
-🧠 How It Works
+## 🧠 How It Works
 
-Think of this system as three friends talking in a private room (a Docker network):
+Three microservices running in Docker, talking to each other like three friends in a private room:
 
-The Brain (rag-agent): This is the LangChain agent. When you ask it a question, it decides if it needs to use a tool.
+```
+  Your Browser / curl
+        │
+        ▼
+  ┌──────────────┐     MCP (SSE)     ┌───────────────┐
+  │  RAG Agent   │ ◄───────────────► │  MCP Knowledge │
+  │  (FastAPI)   │                   │   Server       │
+  │  LangChain   │                   │  (FastMCP)     │
+  └──────┬───────┘                   │  Mock: Drive,  │
+         │                           │  Slack data    │
+         │ Ollama API                └───────────────┘
+         ▼
+  ┌──────────────┐
+  │   Ollama     │
+  │  Llama 3.2   │
+  └──────────────┘
+```
 
-The Toolbox (mcp-knowledge): This acts as the "Knowledge Server." It holds mock data for "Google Drive" and "Slack" and serves it via MCP.
+| Service | Role | What It Does |
+|---------|------|-------------|
+| 🧠 **RAG Agent** | The Brain | LangChain agent — decides which tool to call |
+| 🔧 **MCP Knowledge** | The Toolbox | Serves mock Google Drive and Slack data via MCP |
+| ⚙️ **Ollama** | The Engine | Runs Llama 3.2 locally for text processing |
 
-The Engine (ollama): This runs the actual Llama 3.2 model locally. It does the heavy lifting of processing text.
+---
 
-🛠️ Prerequisites
+## 🚀 Quick Start
 
-You don't need much to get this running. Just make sure you have:
+```bash
+# 1. Clone
+git clone https://github.com/Nikhilchapkanade/Mcp-Core.git
+cd Mcp-Core
 
-Docker Desktop (This is essential as everything runs in containers).
-
-Git (To clone the repo).
-
-⚡ Quick Start Guide
-
-1. Clone the Repo
-First, grab the code and jump into the directory:
-
-Bash
-
-git clone https://github.com/Nikhilchapkanade/mcp-rag-nexus.git
-cd mcp-rag-nexus
-2. Build the Stack
-Fire up the containers. This might take a minute or two the first time as it downloads the Python libraries and sets up the network.
-
-Bash
-
+# 2. Build and start
 docker-compose up --build
 
-3. ⚠️ Important: Download the Brain
-Don't skip this step! By default, the Ollama container starts empty. You need to pull the Llama 3.2 model inside the container.
-
-While the containers are running, open a new terminal window and run:
-
-Bash
-
+# 3. Download the LLM (in a new terminal)
 docker exec -it mcp-rag-system-ollama-1 ollama pull llama3.2
-(Note: If Docker complains about the name, run docker ps to double-check the Ollama container name).
+```
 
-🎮 Let's Test It!
-Once everything is up and running (look for Uvicorn running on http://0.0.0.0:8080 in your logs), it's time to see the magic happen.
+---
 
-You can test it right from your browser or your terminal.
+## 🧪 Test It
 
-🧪 Scenario A: The "Google Drive" Search
-
-Ask the agent about enterprise pricing. It will realize it doesn't know the answer, call the "Product Docs" tool, and give you the mock data.
-
-Browser Link: Click here to ask about Pricing
-
-Terminal Command:
-
-Bash
-
+**Scenario A — "Google Drive" search:**
+```bash
 curl "http://localhost:8080/query?q=What%20is%20the%20pricing%20for%20Enterprise"
-Expected Response:
+# → "The Enterprise plan costs $50/user/month."
+```
 
-"The Enterprise plan costs $50/user/month."
+**Scenario B — "Slack" check:**
+```bash
+curl "http://localhost:8080/query?q=What%20about%20the%20memory%20leak"
+# → Agent searches Slack history for context
+```
 
-🧪 Scenario B: The "Slack" Check
+---
 
-Ask about the dev team's progress. The agent will switch tools and search the "Slack" history.
+## 📁 Project Structure
 
-Browser Link: Click here to ask about the Memory Leak
-
-## 📂 Project Structure
-
-Here is a quick look at how the code is organized if you want to tinker with it:
-
-```text
-├── docker-compose.yml      # The blueprint that connects the 3 services
-├── rag-agent/              # The "Brain"
+```
+Mcp-Core/
+├── docker-compose.yml       # Connects 3 services
+├── rag-agent/               # The Brain
 │   ├── Dockerfile
-│   ├── server.py           # FastAPI server handling your requests
-│   ├── agent.py            # Where LangChain decides which tool to use
+│   ├── server.py            # FastAPI server
+│   ├── agent.py             # LangChain tool routing
+│   ├── mcp_client.py        # MCP connection manager
 │   └── requirements.txt
-└── mcp-knowledge/          # The "Toolbox"
+└── mcp-knowledge/           # The Toolbox
     ├── Dockerfile
-    ├── main.py             # Defines the mock Google/Slack tools via FastMCP
+    ├── main.py              # Mock Google/Slack tools via FastMCP
     └── requirements.txt
+```
+
+---
+
+## 🛠️ Tech Stack
+
+| Component | Technology |
+|-----------|-----------|
+| AI Protocol | Model Context Protocol (MCP) |
+| LLM | Llama 3.2 via Ollama |
+| Agent Framework | LangChain |
+| API Server | FastAPI |
+| MCP Server | FastMCP (SSE transport) |
+| Infrastructure | Docker Compose |
